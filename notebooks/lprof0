@@ -1,0 +1,35 @@
+Timer unit: 1e-06 s
+
+Total time: 57.9913 s
+File: ../ClassifyDashboard/mClassifier.py
+Function: run at line 121
+
+Line #      Hits         Time  Per Hit   % Time  Line Contents
+==============================================================
+   121                                               def run(self, last_file=None, save_output=False):
+   122                                                   """ Main loop for running the model on all of the data """
+   123         1          2.0      2.0      0.0          if last_file is not None:
+   124         1          1.0      1.0      0.0              if last_file == "latest":
+   125         1       5803.0   5803.0      0.0                  last_file = sorted(glob.glob("../data/classified_*"))[-1]
+   126         1       8819.0   8819.0      0.0              old_data = pd.read_csv(os.path.join(self.baseDir,"data/",last_file))
+   127                                                       # Find last file to be processed based on df
+   128         1        506.0    506.0      0.0              last_file = old_data.iloc[-1]['fileName']
+   129         1       1211.0   1211.0      0.0              newest_file_ix = [i+1 for i, f in enumerate(self.roi_fnames) if os.path.basename(f) == last_file][0]
+   130                                                       # Make a new list of files
+   131         1          7.0      7.0      0.0              self.roi_fnames = self.roi_fnames[newest_file_ix:]
+   132         1         17.0     17.0      0.0              self.classData = np.empty((len(self.roi_fnames),50)) # preallocate the totals for each sample
+   133         1         97.0     97.0      0.0              print(len(self.roi_fnames))
+   134                                           
+   135         6       6632.0   1105.3      0.0          for i, fname in tqdm(enumerate(self.roi_fnames)):
+   136         5    4721721.0 944344.2      8.1              img_stack = self.build_image_stack(fname)
+   137         5   53188312.0 10637662.4     91.7              self.run_model(img_stack,i)
+   138                                           
+   139         1        330.0    330.0      0.0          self.output = pd.DataFrame(data=self.classData, columns=self.classes)
+   140         1       2017.0   2017.0      0.0          self.add_datetime(self.roi_fnames)
+   141         1      31899.0  31899.0      0.1          self.add_metadata(self.roi_fnames)
+   142         1          1.0      1.0      0.0          if last_file is not None:
+   143         1       2593.0   2593.0      0.0              self.output = pd.concat((old_data, self.output))
+   144                                                       
+   145         1          1.0      1.0      0.0          if save_output:
+   146         1        353.0    353.0      0.0              out_filename = "classified_" + self.output.iloc[-1].fileName.split(".")[0] + ".csv"
+   147         1      21005.0  21005.0      0.0              self.save_data(out_filename)

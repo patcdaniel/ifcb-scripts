@@ -1,8 +1,9 @@
 # Extra Stuff
 *.zip
 pyifcb/
-
-
+*.png
+*.csv
+.vscode/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

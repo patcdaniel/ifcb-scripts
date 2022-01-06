@@ -1,0 +1,12 @@
+Timer unit: 1e-06 s
+
+Total time: 0 s
+File: ../ClassifyDashboard/mClassifier.py
+Function: run_model at line 73
+
+Line #      Hits         Time  Per Hit   % Time  Line Contents
+==============================================================
+    73                                               def run_model(self, image_stack, i):
+    74                                                   """Classify the image stack"""
+    75                                                   yhat = self.model.predict(image_stack[0])
+    76                                                   self.processing_results(yhat,i)
