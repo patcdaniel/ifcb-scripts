@@ -19,7 +19,7 @@ def load_dataframe():
 
     critter_cols = [col for col in df.columns if col not in ['volume_analyzed','dateTime','nsample', 'inhibitTime', 'runTime', 'syringeSize','fileName','volume_analyzed','nsamples']]
     not_species = ['dateTime',"inhibitTime","runTime","nsample","volume_analyzed","syringeSize",'fileName','nsamples','nsample','ntotals','volume_analyzed','hab','date']
-    habs = ["Pseudo-nitzschia","Alexandrium_singlet","Dinophysis","Lingulodinium","Cochlodinium","Prorocentrum","Gymnodinium","Karenia","Protoperidinium"]
+    habs = ["Pseudo-nitzschia","Alexandrium_singlet","Dinophysis","Lingulodinium","Cochlodinium","Prorocentrum","Gymnodinium","Protoperidinium"]
     species = [cols for cols in df.columns if cols not in not_species]
     not_habs = [cols for cols in df.columns if (cols not in not_species) & (cols not in habs)]
     flowrate = 0.25; # .25 mls per minute
@@ -111,7 +111,7 @@ def timeseries_plots(df, classes, n_days=7, title="",full_records=False):
 def habs_plots(df,n_days=7):
     """ Timeseries plots of only HAB species of interest """
     sns.set_context('talk')
-    habs = ["Pseudo-nitzschia","Alexandrium_singlet","Dinophysis","Lingulodinium","Cochlodinium","Prorocentrum","Gymnodinium","Karenia","Protoperidinium"]
+    habs = ["Pseudo-nitzschia","Alexandrium_singlet","Dinophysis","Lingulodinium","Cochlodinium","Prorocentrum","Gymnodinium","Protoperidinium"]
     fig, ax = plt.subplots(constrained_layout=False)
     plt.subplots_adjust(hspace=.1)
     fig.set_size_inches(10,6)
@@ -182,7 +182,7 @@ def stacked_plots(df, classes, n_days=7, normalized=False):
         ax.set_ylabel("Cells per mL")
     
     ax.legend(bbox_to_anchor=(1.01, 1.04), loc='upper left',frameon=False)
-    ax.set_ylabel("Fraction of cells")
+    
 
     this_week(ax, n_days=n_days)
     ax.text(-.1,
@@ -198,6 +198,7 @@ def stacked_plots(df, classes, n_days=7, normalized=False):
     if normalized:
         ax.set_ylim(0,1)
         plt.savefig(os.path.join("/u/pdaniel/ifcb-scripts/figures", '161-classified-stacked-norm-{}-day.png'.format(str(n_days))),dpi=300,bbox_inches='tight',transparent=False)
+        ax.set_ylabel("Fraction of cells")
     else:
         plt.savefig(os.path.join("/u/pdaniel/ifcb-scripts/figures", '161-classified-stacked-top-{}-day.png'.format(str(n_days))),dpi=300,bbox_inches='tight',transparent=False)
 

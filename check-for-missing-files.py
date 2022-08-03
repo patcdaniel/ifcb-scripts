@@ -1,7 +1,7 @@
 import glob, os
 import numpy as np
 
-base_name = "/opt/ifcb-data/power-buoy-deployment/CA-IFCB-161/2021/"
+base_name = "/opt/ifcb-data/power-buoy-deployment/CA-IFCB-161/2022/"
 dirs = os.listdir(base_name)
 
 def unique(list1):
@@ -20,3 +20,4 @@ for directory in dirs:
         if c != 3:
             ssh_command = "scp -l 1000 ifcb@buoy-ifcb.shore.mbari.org:/mnt/data/ifcbdata/{}.* /opt/ifcb-data/power-buoy-deployment/".format(v)
             print(v,c,ssh_command)
+

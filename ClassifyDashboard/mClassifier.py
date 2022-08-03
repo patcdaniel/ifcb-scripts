@@ -1,3 +1,4 @@
+from matplotlib.pyplot import cla
 import tensorflow as tf
 import keras_preprocessing.image as keras_img
 import numpy as np
@@ -10,6 +11,8 @@ from PIL import Image
 from tqdm import tqdm
 import os
 import datetime as dt
+import warnings
+warnings.filterwarnings('ignore')
 
 
 class ClassifyDashboard:
@@ -35,7 +38,7 @@ class ClassifyDashboard:
     
     def generate_image_list(self):
         """Generate a list of ROI files to read image data from"""
-        fnames = sorted(glob.glob("/opt/ifcb-data/power-buoy-deployment/CA-IFCB-161/2021/*/*.roi"))
+        fnames = sorted(glob.glob("/opt/ifcb-data/power-buoy-deployment/CA-IFCB-161/2022/*/*.roi"))
         # This is a hotfix to get data after the 20th. need to implement something more robust
 #         fnames = [f for f in fnames if int(os.path.basename(f)[7:9])>=20]
         return fnames
@@ -52,14 +55,19 @@ class ClassifyDashboard:
     
     def build_image_stack(self, fname):
         """ Given a URL, get the zip file and unzip the images into a images stack for the model to read """
-        with ifcb.open_raw(fname) as roi_data:
-            array_index = 0
-            roi_names = []
-            img_stack = np.empty(shape=(len(roi_data.images),224,224,3))
-            for roi_num, img_data in roi_data.images.items():
-                img_stack[array_index,:,:,:] = self.prep_image(img_data)
-                array_index += 1
-                roi_names.append(roi_num)
+        try:
+            with ifcb.open_raw(fname) as roi_data:
+                array_index = 0
+                roi_names = []
+                img_stack = np.empty(shape=(len(roi_data.images),224,224,3))
+                
+                for roi_num, img_data in roi_data.images.items():
+                    img_stack[array_index,:,:,:] = self.prep_image(img_data)
+                    array_index += 1
+                    roi_names.append(roi_num)
+                    
+        except Exception as e:
+             print(fname, e)
                 
         return img_stack, roi_names
 
@@ -72,14 +80,22 @@ class ClassifyDashboard:
 
     def run_model(self, image_stack, i):
         """Classify the image stack"""
-        yhat = self.model.predict(image_stack[0])
+        try:
+            yhat = self.model.predict(image_stack[0])
+        except:
+            print(image_stack[0])
         self.processing_results(yhat,i)
 
-    def processing_results(self, yhat, i):
+    def processing_results(self, yhat, i, thresh=.75):
         """ Covert classifications into counts for each timestep """
         headers = list(self.classes.keys())
-        df = pd.DataFrame(data=yhat,columns=headers)
-        totals = df.apply(lambda x: x == df.max(axis=1)).sum().values
+        thresh_array = np.repeat(thresh, yhat.shape[0])
+        max_confidence = yhat.max(axis=1)
+        unclass = np.where(max_confidence < thresh_array)
+        max_ix = yhat.argmax(axis=1)
+        max_ix[unclass] = 50
+        totals = np.bincount(max_ix, minlength=51)
+
         self.classData[i,:] = totals
         
     def str_to_dt(self, datetime_str):
@@ -120,7 +136,7 @@ class ClassifyDashboard:
 
 
     def run(self, last_file=None, save_output=False):
-        """ Main loop for running the model on all of the data """
+        """ Main loop for running the   model on all of the data """
         if last_file is not None:
             if last_file == "latest":
                 last_file = sorted(glob.glob("/u/pdaniel/ifcb-scripts/data/classified-csv/classified_*"))[-1]
@@ -130,10 +146,11 @@ class ClassifyDashboard:
             newest_file_ix = [i+1 for i, f in enumerate(self.roi_fnames) if os.path.basename(f) == last_file][0]
             # Make a new list of files
             self.roi_fnames = self.roi_fnames[newest_file_ix:]
-            self.classData = np.empty((len(self.roi_fnames),50)) # preallocate the totals for each sample
-            print(len(self.roi_fnames))
 
-        for i, fname in tqdm(enumerate(self.roi_fnames)):
+        self.classData = np.empty((len(self.roi_fnames),len(self.classes))) # preallocate the totals for each sample
+        
+
+        for i, fname in tqdm(enumerate(self.roi_fnames), total=len(self.roi_fnames)):
             img_stack = self.build_image_stack(fname)
             self.run_model(img_stack,i)
 
@@ -147,3 +164,4 @@ class ClassifyDashboard:
             out_filename = "classified_" + self.output.iloc[-1].fileName.split(".")[0] + ".csv"
             self.save_data(out_filename)
 
+    

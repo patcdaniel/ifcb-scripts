@@ -17,7 +17,7 @@ def IFCB_volume_analyzed(ifcb):
     looktime = ifcb.hdr_attributes['runTime'] - ifcb.hdr_attributes['inhibitTime'] # in Seconds
     flowrate = 0.25; # .25 mls per minute
     if looktime == 0:
-        """A coupl of .hdr files don't have run time values"""
+        """A couple of .hdr files don't have run time values"""
         times = ifcb.adc[[22,23]].iloc[-1].values
         looktime = times[0] - times[1]
         print("{}:  looktime: {}".format(ifcb.lid,looktime))
@@ -31,4 +31,4 @@ def IFCB_volume_analyzed(ifcb):
     return flowrate*looktime/60
 
 if __name__ == "__main__":
-    ClassifyDashboard().run(last_file="latest",save_output=True)
+    ClassifyDashboard().run(last_file='latest', save_output=True)
